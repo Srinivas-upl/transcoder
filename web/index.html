@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Transcoding Pipeline</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: #333; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .video-card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .quality-buttons { margin: 10px 0; }
+        .quality-btn { background: #007bff; color: white; border: none; padding: 5px 10px; margin: 2px; border-radius: 4px; cursor: pointer; }
+        .quality-btn:hover { background: #0056b3; }
+        .stats { display: flex; gap: 20px; flex-wrap: wrap; }
+        .stat-item { background: #e9ecef; padding: 15px; border-radius: 8px; text-align: center; min-width: 120px; }
+        .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; border-radius: 8px; }
+        .upload-area:hover { border-color: #007bff; }
+        .log-area { background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 8px; font-family: monospace; height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 Video Transcoding Pipeline</h1>
+            <p>Upload videos and get HLS/DASH streams with adaptive bitrate</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 Statistics</h2>
+            <div class="stats">
+                <div class="stat-item">
+                    <h3 id="total-videos">0</h3>
+                    <p>Total Videos</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="processing">0</h3>
+                    <p>Processing</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="completed">0</h3>
+                    <p>Completed</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="total-size">0 MB</h3>
+                    <p>Total Size</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Upload Video</h2>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept="video/*" style="display: none" onchange="handleFileUpload(this)">
+                <p>Click here or drag and drop video files to upload</p>
+                <p><small>Supports: MP4, AVI, MOV, MKV, WMV, FLV, WebM, M4V</small></p>
+            </div>
+            <div id="upload-progress" style="margin-top: 10px; display: none;">
+                <div style="background: #e9ecef; border-radius: 4px; height: 20px;">
+                    <div id="progress-bar" style="background: #007bff; height: 100%; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
+                </div>
+                <p id="upload-status">Uploading...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎬 Processed Videos</h2>
+            <div id="video-grid" class="video-grid">
+                <!-- Videos will be loaded here -->
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📜 Processing Logs</h2>
+            <div id="logs" class="log-area">
+                <div>Video Transcoding Pipeline - Ready for processing</div>
+                <div>Watching input directory for new videos...</div>
+                <div>Supported formats: MP4, AVI, MOV, MKV, WMV, FLV, WebM, M4V</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate loading videos (in real implementation, this would fetch from server)
+        function loadVideos() {
+            const videoGrid = document.getElementById('video-grid');
+
+            // Example video entries (replace with actual API call)
+            const exampleVideos = [
+                { name: 'sample_video_1', status: 'completed', formats: ['1080p', '720p', '480p', '360p'] },
+                { name: 'sample_video_2', status: 'processing', formats: ['720p', '480p'] },
+            ];
+
+            videoGrid.innerHTML = '';
+
+            exampleVideos.forEach(video => {
+                const videoCard = document.createElement('div');
+                videoCard.className = 'video-card';
+                videoCard.innerHTML = `
+                    <h4>${video.name}</h4>
+                    <p>Status: <span style="color: ${video.status === 'completed' ? 'green' : 'orange'}">${video.status}</span></p>
+                    <div class="quality-buttons">
+                        ${video.formats.map(format => 
+                            `<button class="quality-btn" onclick="playVideo('${video.name}', '${format}')">${format}</button>`
+                        ).join('')}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button class="quality-btn" onclick="openPlayer('${video.name}', 'hls')" style="background: #28a745;">🎥 HLS Player</button>
+                        <button class="quality-btn" onclick="openPlayer('${video.name}', 'dash')" style="background: #dc3545;">📺 DASH Player</button>
+                    </div>
+                `;
+                videoGrid.appendChild(videoCard);
+            });
+        }
+
+        function playVideo(videoName, quality) {
+            alert(`Playing ${videoName} in ${quality} quality`);
+            // In real implementation, this would open the video player
+        }
+
+        function openPlayer(videoName, type) {
+            const playerUrl = `${videoName}/${type}_player.html`;
+            window.open(playerUrl, '_blank');
+        }
+
+        function handleFileUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const progressDiv = document.getElementById('upload-progress');
+                const progressBar = document.getElementById('progress-bar');
+                const statusText = document.getElementById('upload-status');
+
+                progressDiv.style.display = 'block';
+
+                // Simulate upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        statusText.textContent = 'Upload completed! Processing will begin shortly.';
+                        updateLogs(`Uploaded: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+                    }
+                    progressBar.style.width = progress + '%';
+                }, 300);
+            }
+        }
+
+        function updateLogs(message) {
+            const logDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const newLog = `[${timestamp}] ${message}`;
+
+            logDiv.innerHTML += '<br>' + newLog;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('total-videos').textContent = '3';
+            document.getElementById('processing').textContent = '1';
+            document.getElementById('completed').textContent = '2';
+            document.getElementById('total-size').textContent = '847 MB';
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVideos();
+            updateStats();
+
+            // Refresh data every 30 seconds
+            setInterval(() => {
+                updateStats();
+                loadVideos();
+            }, 30000);
+        });
+
+        // Handle drag and drop
+        const uploadArea = document.querySelector('.upload-area');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#007bff';
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload(document.getElementById('fileInput'));
+            }
+        });
+    </script>
+</body>
+</html>

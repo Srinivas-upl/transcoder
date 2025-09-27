@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # FFmpeg transcoding service
+  transcoder:
+    build: .
+    volumes:
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/input:/app/input
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/output:/app/output
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/logs:/app/logs
+    working_dir: /app
+    command: python3 batch_processor.py
+
+  # NGINX for serving HLS/DASH content
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/output:/usr/share/nginx/html
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/config/nginx.conf:/etc/nginx/nginx.conf
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/web:/usr/share/nginx/html/admin
+    # depends_on:
+    #   - transcoder
+
+  # Optional: MinIO for object storage
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - /Users/srinivas/Downloads/hls-dash-transcoding-pipeline/minio_data:/data
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: adminpass123

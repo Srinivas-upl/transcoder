@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Logs
+*.log
+logs/*.log
+
+# Output files (uncomment if you don't want to track processed videos)
+# output/
+# !output/README.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.docker/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Large video files in input (optional)
+# input/*.mp4
+# input/*.avi
+# input/*.mov
+# input/*.mkv
